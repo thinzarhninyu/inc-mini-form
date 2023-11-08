@@ -247,7 +247,7 @@ export function ProjectForm() {
                                                         <FormControl>
                                                             <Checkbox
                                                                 checked={field.value?.includes(item.id)}
-                                                                onCheckedChange={(checked: Boolean) => {
+                                                                onCheckedChange={(checked: string | boolean) => {
                                                                     return checked
                                                                         ? field.onChange([...field.value, item.id])
                                                                         : field.onChange(
