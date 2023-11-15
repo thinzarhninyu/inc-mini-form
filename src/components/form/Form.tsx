@@ -6,10 +6,12 @@ import * as z from "zod"
 import { format } from "date-fns"
 import React, { useState, useEffect } from "react"
 
-import { CalendarIcon, Pencil } from "lucide-react"
+import { CalendarIcon } from "lucide-react"
 
 import { Calendar } from "@/components/ui/calendar"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { Slider } from "@/components/ui/slider"
+import { FileUpload } from "../FileUpload"
 import {
     Form,
     FormControl,
@@ -39,6 +41,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { api } from "@/utils/api"
+
+import { FormType } from "@/Types/form"
 
 const frameworks = [
     {
@@ -67,6 +72,25 @@ const frameworks = [
     },
 ] as const;
 
+const updates = [
+    "yes", "no", "maybe"
+] as const;
+
+const types = [
+    {
+        id: "school_project",
+        label: "School Project",
+    },
+    {
+        id: "personal_project",
+        label: "Personal Project",
+    },
+    {
+        id: "paid_project",
+        label: "Paid Project",
+    },
+] as const;
+
 const FormSchema = z.object({
     project_name: z.string().min(1, {
         message: "Input field cannot be null.",
@@ -74,13 +98,7 @@ const FormSchema = z.object({
     description: z.string().min(2, {
         message: "Input field cannot be null.",
     }),
-    // completion_date: z.string().min(2, {
-    //     message: "Input field cannot be null.",
-    // }),
     completion_date: z.date().min(new Date("1900-01-01"), {
-        message: "Input field cannot be null.",
-    }),
-    completion_time: z.date().min(new Date("1900-01-01"), {
         message: "Input field cannot be null.",
     }),
     type: z.string().min(2, {
@@ -89,47 +107,112 @@ const FormSchema = z.object({
     frameworks: z.array(z.string()).refine((value) => value.some((item) => item), {
         message: "You have to select at least one item.",
     }),
-    updates: z.enum(["yes", "no", "maybe"], {
-        required_error: "You need to select one option.",
+    updates: z.string().min(1, {
+        message: "Input field cannot be null."
+    }),
+    rating: z.number().min(0, {
+        message: "Input field cannot be null."
     }),
     image: z.string().min(2, {
         message: "You need to upload a picture."
     }),
 })
 
-export function ProjectForm() {
+export function ProjectForm({ formData }: { formData?: FormType }) {
+
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
-            project_name: "",
-            description: "",
+            project_name: '',
+            description: '',
             completion_date: new Date(),
-            type: "",
+            type: '',
             frameworks: [],
-            updates: "maybe",
-            image: "",
-
-        },
+            updates: '',
+            rating: 0,
+            image: '',
+        }
     })
 
-    function onSubmit(data: z.infer<typeof FormSchema>) {
-        toast({
-            title: "You submitted the following values:",
-            description: (
-                <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                    <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-                </pre>
-            ),
-        })
-    }
+    useEffect(() => {
+        if (formData) {
+            form.reset({
+                project_name: formData.project_name,
+                description: formData.description,
+                completion_date: formData.completion_date,
+                type: formData.type,
+                frameworks: formData.frameworks,
+                updates: formData.updates,
+                rating: formData.rating,
+                image: formData.image,
+            })
+        }
+    }, [formData])
 
-    const [project_name, set_project_name] = useState("Project Form");
+    const createForm = api.form.createForm.useMutation();
+    const updateForm = api.form.updateForm.useMutation();
+
+    function onSubmit(data: z.infer<typeof FormSchema>) {
+        console.log("submit is clicked")
+        if (formData) {
+            return new Promise(async (resolve, reject) => {
+                await updateForm.mutateAsync({
+                    id: formData.id,
+                    title: "Project Form",
+                    project_name: data.project_name,
+                    description: data.description,
+                    completion_date: data.completion_date,
+                    type: data.type,
+                    frameworks: data.frameworks,
+                    updates: data.updates,
+                    rating: data.rating,
+                    image: data.image,
+                }).then((res) => {
+                    console.log("updating form")
+                    toast({
+                        title: "You updated the following values:",
+                        description: (
+                            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                                <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+                            </pre>
+                        ),
+                    })
+                    resolve(res);
+                });
+            })
+        } else {
+            return new Promise(async (resolve, reject) => {
+                await createForm.mutateAsync({
+                    title: "Project Form",
+                    project_name: data.project_name,
+                    description: data.description,
+                    completion_date: data.completion_date,
+                    type: data.type,
+                    frameworks: data.frameworks,
+                    updates: data.updates,
+                    rating: data.rating,
+                    image: data.image,
+                }).then((res) => {
+                    console.log("creating form")
+                    toast({
+                        title: "You submitted the following values:",
+                        description: (
+                            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                                <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+                            </pre>
+                        ),
+                    })
+                    resolve(res);
+                });
+            })
+        }
+
+    }
 
     return (
         <>
             <div className="sticky top-0 bg-gray-800 text-center p-5 text-white flex items-center justify-center">
-                {/* <Input type="text" placeholder="Project Form" defaultValue="Project Form" value={project_name} onChange={(e) => set_project_name(e.target.value)} className="w-75 bg-transparent text-center border-0" /> */}
-                {project_name}
+                Project Form
             </div>
             <div className="flex justify-center items-center py-7 mx-10">
                 <Form {...form}>
@@ -209,16 +292,19 @@ export function ProjectForm() {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Project Type</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select the project type" />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="m@example.com">School Project</SelectItem>
-                                            <SelectItem value="m@google.com">Personal Project</SelectItem>
-                                            <SelectItem value="m@support.com">Paid Project</SelectItem>
+                                            {types.map((item) => (
+                                                <SelectItem key={item.id} value={item.id}>
+                                                    {item.label}
+                                                </SelectItem>
+
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -272,42 +358,39 @@ export function ProjectForm() {
                         />
                         <FormField
                             control={form.control}
-                            name="type"
+                            name="updates"
                             render={({ field }) => (
                                 <FormItem className="space-y-3">
                                     <FormLabel>Open to Updates?</FormLabel>
                                     <FormControl>
-                                        <RadioGroup
-                                            onValueChange={field.onChange}
-                                            defaultValue={field.value}
-                                            className="flex flex-col space-y-1"
-                                        >
-                                            <FormItem className="flex items-center space-x-3 space-y-0">
-                                                <FormControl>
-                                                    <RadioGroupItem value="yes" />
-                                                </FormControl>
-                                                <FormLabel className="font-normal">
-                                                    Yes
-                                                </FormLabel>
-                                            </FormItem>
-                                            <FormItem className="flex items-center space-x-3 space-y-0">
-                                                <FormControl>
-                                                    <RadioGroupItem value="no" />
-                                                </FormControl>
-                                                <FormLabel className="font-normal">
-                                                    No
-                                                </FormLabel>
-                                            </FormItem>
-                                            <FormItem className="flex items-center space-x-3 space-y-0">
-                                                <FormControl>
-                                                    <RadioGroupItem value="maybe" />
-                                                </FormControl>
-                                                <FormLabel className="font-normal">Maybe</FormLabel>
-                                            </FormItem>
+                                        <RadioGroup onValueChange={field.onChange} className="flex flex-col space-y-1">
+                                            {updates.map((item) => (
+                                                <FormItem key={item} className="flex items-center space-x-3 space-y-0">
+                                                    <FormControl>
+                                                        <RadioGroupItem value={item} checked={field.value === item} />
+                                                    </FormControl>
+                                                    <FormLabel className="font-normal">{item}</FormLabel>
+                                                </FormItem>
+                                            ))}
                                         </RadioGroup>
+                                    </FormControl>
+
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="rating"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Difficulty Rating</FormLabel>
+                                    <FormControl>
+                                        <Slider defaultValue={[field.value]} min={0} max={5} step={1} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
+
                             )}
                         />
                         <FormField
@@ -317,24 +400,30 @@ export function ProjectForm() {
                                 <FormItem>
                                     <FormLabel>Project Image</FormLabel>
                                     <FormControl>
-                                        <Input id="picture" type="file" {...field} />
+                                        <FileUpload
+                                            endpoint="projectImage"
+                                            onChange={(value) => {
+                                                // Update the value in your form state using the provided onChange callback
+                                                field.onChange(value);
+                                            }}
+                                            value={field.value}
+                                        />
+
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
 
+
                             )}
                         />
 
-
-
                         <div className="flex items-center justify-center gap-x-3">
-                            {/* <Button type="button" variant={"outline"}>Discard</Button> */}
                             <Link href="/" className={buttonVariants({ variant: "outline" })}>Discard</Link>
                             <Button type="submit">Submit</Button>
                         </div>
                     </form>
                 </Form>
-            </div>
+            </div >
         </>
     )
 }

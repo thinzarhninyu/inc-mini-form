@@ -4,6 +4,7 @@ import Head from "next/head";
 import { api } from "@/utils/api";
 
 import "@/styles/globals.css";
+import "@uploadthing/react/styles.css";
 
 import { Roboto_Mono } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster";

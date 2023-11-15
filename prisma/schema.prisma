@@ -10,10 +10,25 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+enum Updates {
+    yes
+    no
+    maybe
+}
+
 model Form {
-    id        String   @id @default(cuid())
-    title     String
-    project   Json?
+    id              String   @id @default(cuid())
+    title           String
+    project_name    String
+    description     String
+    completion_date DateTime
+    type            String
+    frameworks      String[]
+    // updates         Updates
+    updates         String
+    rating          Int?
+    image           String
+
     // pinned    Boolean  @default(false)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

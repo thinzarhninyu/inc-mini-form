@@ -17,6 +17,12 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+  images: {
+    domains: [
+      "uploadthing.com",
+      "utfs.io"
+    ]
+  }
 };
 
 export default config;
