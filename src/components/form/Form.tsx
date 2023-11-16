@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
-import React, { useState, useEffect } from "react"
+import React, { useEffect } from "react"
 
 import { CalendarIcon } from "lucide-react"
 
@@ -12,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { FileUpload } from "../FileUpload"
+import { UploadButton } from "@/utils/uploadthing";
 import {
     Form,
     FormControl,
@@ -147,6 +148,7 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                 image: formData.image,
             })
         }
+        console.log("formData.rating", formData?.rating)
     }, [formData])
 
     const createForm = api.form.createForm.useMutation();
@@ -386,13 +388,14 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                                 <FormItem>
                                     <FormLabel>Difficulty Rating</FormLabel>
                                     <FormControl>
-                                        <Slider defaultValue={[field.value]} min={0} max={5} step={1} />
+                                        <Slider value={[field.value]} onValueChange={(value) => field.onChange(value[0])} min={0} max={5} step={1} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
 
                             )}
                         />
+
                         <FormField
                             control={form.control}
                             name="image"

@@ -9,6 +9,7 @@ export type FormType  = {
     updates: string,
     rating: number,
     image: string,
+    // createdBy: string,
     createdAt: Date,
     updatedAt: Date
 }

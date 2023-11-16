@@ -1,11 +1,8 @@
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "../trpc";
 import { z } from "zod";
 import { db } from "@/server/db";
 const handleError = (error: Error, message: string) => {
-  // Log the error for debugging
   console.error(error);
-
-  // Here you can add more complex logic, like sending the error to an error-tracking service
 
   throw new Error(`${message}: ${error.message}`);
 };
@@ -41,7 +38,7 @@ export const formRouter = createTRPCRouter({
         handleError(err as Error, "Failed to find Form object");
       }
     }),
-    createForm: publicProcedure
+    createForm: protectedProcedure
     .input(
         z.object({
             title: z.string(),
@@ -52,12 +49,12 @@ export const formRouter = createTRPCRouter({
             frameworks: z.array(z.string()),
             updates: z.string(),
             rating: z.number(),
-            image: z.string()
+            image: z.string(),
         }),
     )
-    .mutation(async (opts) => {
+    .mutation(async ({ ctx, input }) => {
         try {
-            const { input } = opts;
+            // const { input } = opts;
             const result = await db.form.create({
                 data: {
                     title: input.title,
@@ -68,7 +65,8 @@ export const formRouter = createTRPCRouter({
                     frameworks: input.frameworks,
                     updates: input.updates,
                     rating: input.rating,
-                    image: input.image
+                    image: input.image,
+                    createdById: ctx.session.user.id
                 },
             });
             return result;
@@ -91,9 +89,9 @@ export const formRouter = createTRPCRouter({
         image: z.string()
       }),
     )
-    .mutation(async (opts) => {
+    .mutation(async ({input}) => {
       try {
-        const { input } = opts;
+        // const { input } = opts;
         const result = await db.form.update({
           where: { id: input.id },
           data: {

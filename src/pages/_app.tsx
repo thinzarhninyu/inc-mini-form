@@ -8,35 +8,27 @@ import "@uploadthing/react/styles.css";
 
 import { Roboto_Mono } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster";
-// import { Skeleton } from "@/components/ui/skeleton"
-
-import { ClerkProvider, RedirectToSignIn, SignedIn, SignedOut } from "@clerk/nextjs";
+import { SessionProvider } from "next-auth/react";
+import { type Session } from "next-auth";
 
 const font = Roboto_Mono({
   weight: '400',
   subsets: ['latin'],
 })
 
-const MyApp: AppType = ({ Component, pageProps }) => {
+const MyApp: AppType<{ session: Session | null }> = ({ Component, pageProps: { session, ...pageProps } }) => {
   return (
-    <ClerkProvider {...pageProps}>
-
+    <SessionProvider session={session}>
       <Head>
         <title>INC MINI FORM</title>
         <meta name="description" content="INC MINI FORM" />
         <link rel="icon" href="/logo.jpg" />
       </Head>
-
-      <SignedIn>
-        <main className={font.className}>
-          <Component {...pageProps} />
-          <Toaster />
-        </main>
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </ClerkProvider >
+      <main className={font.className}>
+        <Component {...pageProps} />
+        <Toaster />
+      </main>
+    </SessionProvider>
   );
 };
 
