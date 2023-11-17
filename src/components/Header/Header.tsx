@@ -46,7 +46,7 @@ const Header = ({ page }: { page: string }) => {
                                         <DropdownMenu>
                                             <DropdownMenuTrigger>
                                                 <Avatar>
-                                                    <AvatarImage src={sessionData.user?.image} />
+                                                    <AvatarImage src={sessionData.user?.image ?? 'https://github.com/shadcn.png'} />
                                                     <AvatarFallback>CN</AvatarFallback>
                                                 </Avatar>
                                             </DropdownMenuTrigger>
