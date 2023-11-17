@@ -5,7 +5,7 @@ import Redirect from "@/components/Redirect";
 import Header from "@/components/Header/Header";
 import Loading from "@/components/Loading";
 
-export default () => {
+const Form = () => {
     const { data: sessionData, status } = useSession();
 
     if (status === "loading") {
@@ -25,3 +25,5 @@ export default () => {
         </>
     );
 }
+
+export default Form;

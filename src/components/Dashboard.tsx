@@ -25,7 +25,7 @@ import { types } from "@/data/option"
 
 import { format } from 'date-fns';
 
-export default () => {
+const Dashboard = () => {
 
     const { data: forms } = api.form.formSelect.useQuery();
     const deleteForm = api.form.deleteForm.useMutation();
@@ -82,7 +82,7 @@ export default () => {
                                 <CardTitle className="text-center whitespace-normal break-words">{project.project_name}</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {types.map((type: any) => (
+                                {types.map((type) => (
                                     type.id === project.type && (
                                         <p key={type.id}>{type.label}</p>
                                     )
@@ -106,3 +106,5 @@ export default () => {
         </div>
     )
 }
+
+export default Dashboard;

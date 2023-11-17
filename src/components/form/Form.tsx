@@ -42,7 +42,7 @@ import { FileUpload } from "@/components/FileUpload"
 
 import { cn } from "@/lib/utils"
 import { api } from "@/utils/api"
-import { FormType } from "@/types/form"
+import { type FormType } from "@/types/form"
 import { frameworks, updates, types } from "@/data/option"
 
 const FormSchema = z.object({
@@ -105,16 +105,17 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
             })
         }
         console.log("formData.rating", formData?.rating)
-    }, [formData])
+    }, [formData, form])
 
     const createForm = api.form.createForm.useMutation();
     const updateForm = api.form.updateForm.useMutation();
 
-    function onSubmit(data: z.infer<typeof FormSchema>) {
-        console.log("submit is clicked")
+    async function onSubmit(data: z.infer<typeof FormSchema>) {
+        console.log("submit is clicked");
+
         if (formData) {
-            return new Promise(async (resolve, reject) => {
-                await updateForm.mutateAsync({
+            try {
+                const res = await updateForm.mutateAsync({
                     id: formData.id,
                     title: "Project Form",
                     project_name: data.project_name,
@@ -126,23 +127,25 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                     rating: data.rating,
                     image: data.image,
                     brief: data.brief,
-                }).then((res) => {
-                    console.log("updating form")
-                    toast({
-                        title: "You updated the following values:",
-                        description: (
-                            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                                <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-                            </pre>
-                        ),
-                    })
-                    resolve(res);
-                    window.location.href = "/"
                 });
-            })
+
+                console.log("updating form");
+                toast({
+                    title: "You updated the following values:",
+                    description: (
+                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                            <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+                        </pre>
+                    ),
+                });
+                window.location.href = "/";
+                return res;
+            } catch (error) {
+                console.error("Error updating form:", error);
+            }
         } else {
-            return new Promise(async (resolve, reject) => {
-                await createForm.mutateAsync({
+            try {
+                const res = await createForm.mutateAsync({
                     title: "Project Form",
                     project_name: data.project_name,
                     description: data.description,
@@ -153,32 +156,35 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                     rating: data.rating,
                     image: data.image,
                     brief: data.brief,
-                }).then((res) => {
-                    console.log("creating form")
-                    toast({
-                        title: "You submitted the following values:",
-                        description: (
-                            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                                <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-                            </pre>
-                        ),
-                    })
-                    form.reset({
-                        project_name: '',
-                        description: '',
-                        completion_date: new Date(),
-                        type: '',
-                        frameworks: [],
-                        updates: '',
-                        rating: 0,
-                        image: '',
-                        brief: null
-                    })
-                    resolve(res);
                 });
-            })
-        }
 
+                console.log("creating form");
+                toast({
+                    title: "You submitted the following values:",
+                    description: (
+                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                            <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+                        </pre>
+                    ),
+                });
+
+                form.reset({
+                    project_name: "",
+                    description: "",
+                    completion_date: new Date(),
+                    type: "",
+                    frameworks: [],
+                    updates: "",
+                    rating: 0,
+                    image: "",
+                    brief: null,
+                });
+
+                return res;
+            } catch (error) {
+                console.error("Error creating form:", error);
+            }
+        }
     }
 
     return (
