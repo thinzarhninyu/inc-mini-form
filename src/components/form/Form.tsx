@@ -1,22 +1,20 @@
 "use client"
+import React, { useEffect } from "react"
+import Link from "next/link"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
-import React, { useEffect } from "react"
 
 import { CalendarIcon } from "lucide-react"
 
 import { Calendar } from "@/components/ui/calendar"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { FileUpload } from "../FileUpload"
-import { UploadButton } from "@/utils/uploadthing";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -40,57 +38,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
+import { FileUpload } from "@/components/FileUpload"
+
 import { cn } from "@/lib/utils"
-import Link from "next/link"
 import { api } from "@/utils/api"
-
-import { FormType } from "@/Types/form"
-
-const frameworks = [
-    {
-        id: "recents",
-        label: "Recents",
-    },
-    {
-        id: "home",
-        label: "Home",
-    },
-    {
-        id: "applications",
-        label: "Applications",
-    },
-    {
-        id: "desktop",
-        label: "Desktop",
-    },
-    {
-        id: "downloads",
-        label: "Downloads",
-    },
-    {
-        id: "documents",
-        label: "Documents",
-    },
-] as const;
-
-const updates = [
-    "yes", "no", "maybe"
-] as const;
-
-const types = [
-    {
-        id: "school_project",
-        label: "School Project",
-    },
-    {
-        id: "personal_project",
-        label: "Personal Project",
-    },
-    {
-        id: "paid_project",
-        label: "Paid Project",
-    },
-] as const;
+import { FormType } from "@/types/form"
+import { frameworks, updates, types } from "@/data/option"
 
 const FormSchema = z.object({
     project_name: z.string().min(1, {
@@ -117,6 +70,7 @@ const FormSchema = z.object({
     image: z.string().min(2, {
         message: "You need to upload a picture."
     }),
+    brief: z.string().nullable(),
 })
 
 export function ProjectForm({ formData }: { formData?: FormType }) {
@@ -132,6 +86,7 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
             updates: '',
             rating: 0,
             image: '',
+            brief: null,
         }
     })
 
@@ -146,6 +101,7 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                 updates: formData.updates,
                 rating: formData.rating,
                 image: formData.image,
+                brief: formData.brief,
             })
         }
         console.log("formData.rating", formData?.rating)
@@ -169,6 +125,7 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                     updates: data.updates,
                     rating: data.rating,
                     image: data.image,
+                    brief: data.brief,
                 }).then((res) => {
                     console.log("updating form")
                     toast({
@@ -180,6 +137,7 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                         ),
                     })
                     resolve(res);
+                    window.location.href = "/"
                 });
             })
         } else {
@@ -194,6 +152,7 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                     updates: data.updates,
                     rating: data.rating,
                     image: data.image,
+                    brief: data.brief,
                 }).then((res) => {
                     console.log("creating form")
                     toast({
@@ -204,6 +163,17 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                             </pre>
                         ),
                     })
+                    form.reset({
+                        project_name: '',
+                        description: '',
+                        completion_date: new Date(),
+                        type: '',
+                        frameworks: [],
+                        updates: '',
+                        rating: 0,
+                        image: '',
+                        brief: null
+                    })
                     resolve(res);
                 });
             })
@@ -213,9 +183,6 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
 
     return (
         <>
-            <div className="sticky top-0 bg-gray-800 text-center p-5 text-white flex items-center justify-center">
-                Project Form
-            </div>
             <div className="flex justify-center items-center py-7 mx-10">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
@@ -415,8 +382,28 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
+                            )}
+                        />
 
+                        <FormField
+                            control={form.control}
+                            name="brief"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Project Brief <span className="text-xs">(Optional)</span></FormLabel>
+                                    <FormControl>
+                                        <FileUpload
+                                            endpoint="projectBrief"
+                                            onChange={(value) => {
+                                                // Update the value in your form state using the provided onChange callback
+                                                field.onChange(value);
+                                            }}
+                                            value={field.value}
+                                        />
 
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
                             )}
                         />
 

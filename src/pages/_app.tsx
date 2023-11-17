@@ -7,9 +7,10 @@ import "@/styles/globals.css";
 import "@uploadthing/react/styles.css";
 
 import { Roboto_Mono } from 'next/font/google';
-import { Toaster } from "@/components/ui/toaster";
 import { SessionProvider } from "next-auth/react";
 import { type Session } from "next-auth";
+
+import { Toaster } from "@/components/ui/toaster";
 
 const font = Roboto_Mono({
   weight: '400',

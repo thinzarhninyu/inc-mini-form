@@ -21,6 +21,7 @@ model Form {
     updates         String
     rating          Int
     image           String
+    brief           String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

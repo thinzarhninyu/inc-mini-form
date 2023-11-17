@@ -1,36 +1,39 @@
-import { createTRPCRouter, publicProcedure, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { z } from "zod";
 import { db } from "@/server/db";
 const handleError = (error: Error, message: string) => {
   console.error(error);
-
   throw new Error(`${message}: ${error.message}`);
 };
 
 export const formRouter = createTRPCRouter({
    
-    formSelect: publicProcedure
-    .query(async () => {
+    formSelect: protectedProcedure
+    .query(async ({ ctx }) => {
         try {
-            const forms = await db.form.findMany();
+            const forms = await db.form.findMany({
+              where: {
+                createdById: ctx.session.user.id
+              }
+            });
             return forms;
         } catch (err) {
             handleError(err as Error, "Failed to find Form objects");
             throw err; // Rethrow the error after handling it
         }
     }),
-    formSelectByID: publicProcedure
+    formSelectByID: protectedProcedure
     .input(
       z.object({
         id: z.string(),
       }),
     )
-    .query(async (opts) => {
+    .query(async ({ input, ctx }) => {
       try {
-        const { input } = opts;
         const form = await db.form.findUniqueOrThrow({
           where: {
-            id: input.id
+            id: input.id,
+            createdById: ctx.session.user.id
           },
         });
         return form;
@@ -50,11 +53,11 @@ export const formRouter = createTRPCRouter({
             updates: z.string(),
             rating: z.number(),
             image: z.string(),
+            brief: z.string().nullable(),
         }),
     )
     .mutation(async ({ ctx, input }) => {
         try {
-            // const { input } = opts;
             const result = await db.form.create({
                 data: {
                     title: input.title,
@@ -66,6 +69,7 @@ export const formRouter = createTRPCRouter({
                     updates: input.updates,
                     rating: input.rating,
                     image: input.image,
+                    brief: input.brief,
                     createdById: ctx.session.user.id
                 },
             });
@@ -74,7 +78,7 @@ export const formRouter = createTRPCRouter({
             handleError(err as Error, "Failed to create new Form object");
         }
     }),
-    updateForm: publicProcedure
+    updateForm: protectedProcedure
     .input(
       z.object({
         id: z.string(),
@@ -86,7 +90,8 @@ export const formRouter = createTRPCRouter({
         frameworks: z.array(z.string()),
         updates: z.string(),
         rating: z.number(),
-        image: z.string()
+        image: z.string(),
+        brief: z.string().nullable(),
       }),
     )
     .mutation(async ({input}) => {
@@ -104,7 +109,8 @@ export const formRouter = createTRPCRouter({
             frameworks: input.frameworks,
             updates: input.updates,
             rating: input.rating,
-            image: input.image
+            image: input.image,
+            brief: input.brief
           },
         });
         return result;
@@ -112,15 +118,14 @@ export const formRouter = createTRPCRouter({
         handleError(err as Error, "Failed to update Form object");
       }
     }),
-    deleteForm: publicProcedure
+    deleteForm: protectedProcedure
     .input(
       z.object({
         id: z.string()
       }),
     )
-    .mutation(async (opts) => {
+    .mutation(async ({ input }) => {
       try {
-        const { input } = opts;
         const result = await db.form.deleteMany({
           where: { id: input.id },
         });
