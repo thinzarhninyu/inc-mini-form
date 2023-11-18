@@ -48,10 +48,12 @@ export const formRouter = createTRPCRouter({
             project_name: z.string(),
             description: z.string(),
             completion_date: z.date(),
+            completion_time: z.string().nullable(),
             type: z.string(),
             frameworks: z.array(z.string()),
             updates: z.string(),
             rating: z.number(),
+            ongoing: z.boolean(),
             image: z.string(),
             brief: z.string().nullable(),
         }),
@@ -64,10 +66,12 @@ export const formRouter = createTRPCRouter({
                     project_name: input.project_name,
                     description: input.description,
                     completion_date: input.completion_date,
+                    completion_time: input.completion_time,
                     type: input.type,
                     frameworks: input.frameworks,
                     updates: input.updates,
                     rating: input.rating,
+                    ongoing: input.ongoing,
                     image: input.image,
                     brief: input.brief,
                     createdById: ctx.session.user.id
@@ -86,17 +90,18 @@ export const formRouter = createTRPCRouter({
         project_name: z.string(),
         description: z.string(),
         completion_date: z.date(),
+        completion_time: z.string().nullable(),
         type: z.string(),
         frameworks: z.array(z.string()),
         updates: z.string(),
         rating: z.number(),
+        ongoing: z.boolean(),
         image: z.string(),
         brief: z.string().nullable(),
       }),
     )
     .mutation(async ({input}) => {
       try {
-        // const { input } = opts;
         const result = await db.form.update({
           where: { id: input.id },
           data: {
@@ -105,10 +110,12 @@ export const formRouter = createTRPCRouter({
             project_name: input.project_name,
             description: input.description,
             completion_date: input.completion_date,
+            completion_time: input.completion_time,
             type: input.type,
             frameworks: input.frameworks,
             updates: input.updates,
             rating: input.rating,
+            ongoing: input.ongoing,
             image: input.image,
             brief: input.brief
           },

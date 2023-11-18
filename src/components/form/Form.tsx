@@ -12,6 +12,7 @@ import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
 import {
     Form,
     FormControl,
@@ -55,17 +56,22 @@ const FormSchema = z.object({
     completion_date: z.date().min(new Date("1900-01-01"), {
         message: "Input field cannot be null.",
     }),
+    completion_time: z.string().nullable(),
     type: z.string().min(2, {
         message: "Input field cannot be null."
     }),
     frameworks: z.array(z.string()).refine((value) => value.some((item) => item), {
         message: "You have to select at least one item.",
     }),
+    custom_framework: z.string().nullable(),
     updates: z.string().min(1, {
         message: "Input field cannot be null."
     }),
     rating: z.number().min(0, {
         message: "Input field cannot be null."
+    }),
+    ongoing: z.boolean({
+        required_error: "Input field cannot be null."
     }),
     image: z.string().min(2, {
         message: "You need to upload a picture."
@@ -81,10 +87,13 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
             project_name: '',
             description: '',
             completion_date: new Date(),
+            completion_time: new Date().toLocaleTimeString('en-US'),
             type: '',
             frameworks: [],
+            custom_framework: '',
             updates: '',
             rating: 0,
+            ongoing: false,
             image: '',
             brief: null,
         }
@@ -92,26 +101,44 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
 
     useEffect(() => {
         if (formData) {
+            const custom_frameworks = [];
+            const default_frameworks = [];
+
+            for (const framework of formData.frameworks) {
+                const existingFramework = frameworks.find(existing => existing.id === framework);
+
+                if (!existingFramework) {
+                    custom_frameworks.push(
+                        framework.toLowerCase()
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, c => c.toUpperCase())
+                    );
+                } else {
+                    default_frameworks.push(existingFramework.id);
+                }
+            }
+
             form.reset({
                 project_name: formData.project_name,
                 description: formData.description,
                 completion_date: formData.completion_date,
+                completion_time: formData.completion_time ? formData.completion_time : "",
                 type: formData.type,
-                frameworks: formData.frameworks,
+                frameworks: default_frameworks,
+                custom_framework: custom_frameworks.join(', '),
                 updates: formData.updates,
                 rating: formData.rating,
+                ongoing: formData.ongoing,
                 image: formData.image,
                 brief: formData.brief,
             })
         }
-        console.log("formData.rating", formData?.rating)
     }, [formData, form])
 
     const createForm = api.form.createForm.useMutation();
     const updateForm = api.form.updateForm.useMutation();
 
     async function onSubmit(data: z.infer<typeof FormSchema>) {
-        console.log("submit is clicked");
 
         if (formData) {
             try {
@@ -121,15 +148,20 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                     project_name: data.project_name,
                     description: data.description,
                     completion_date: data.completion_date,
+                    completion_time: data.completion_time,
                     type: data.type,
-                    frameworks: data.frameworks,
+                    frameworks: data.custom_framework
+                        ? [...data.frameworks, ...data.custom_framework.split(',').map(item =>
+                            item.toLowerCase().replace(/^ /, '').replace(/ /g, '_')
+                        )]
+                        : data.frameworks,
                     updates: data.updates,
                     rating: data.rating,
+                    ongoing: data.ongoing,
                     image: data.image,
                     brief: data.brief,
                 });
 
-                console.log("updating form");
                 toast({
                     title: "You updated the following values:",
                     description: (
@@ -150,15 +182,20 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                     project_name: data.project_name,
                     description: data.description,
                     completion_date: data.completion_date,
+                    completion_time: data.completion_time,
                     type: data.type,
-                    frameworks: data.frameworks,
+                    frameworks: data.custom_framework
+                        ? [...data.frameworks, ...data.custom_framework.split(',').map(item =>
+                            item.toLowerCase().replace(/^ /, '').replace(/ /g, '_')
+                        )]
+                        : data.frameworks,
                     updates: data.updates,
                     rating: data.rating,
+                    ongoing: data.ongoing,
                     image: data.image,
                     brief: data.brief,
                 });
 
-                console.log("creating form");
                 toast({
                     title: "You submitted the following values:",
                     description: (
@@ -172,10 +209,13 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                     project_name: "",
                     description: "",
                     completion_date: new Date(),
+                    completion_time: new Date().toLocaleTimeString('en-US'),
                     type: "",
                     frameworks: [],
+                    custom_framework: '',
                     updates: "",
                     rating: 0,
+                    ongoing: false,
                     image: "",
                     brief: null,
                 });
@@ -232,7 +272,7 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                                                 <Button
                                                     variant={"outline"}
                                                     className={cn(
-                                                        "w-[240px] pl-3 text-left font-normal",
+                                                        "pl-3 text-left font-normal",
                                                         !field.value && "text-muted-foreground"
                                                     )}
                                                 >
@@ -259,6 +299,20 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                                     </Popover>
                                     <FormMessage />
                                 </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="completion_time"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Project Completion Time <span className="text-xs">(Optional)</span></FormLabel>
+                                    <FormControl>
+                                        <Input type="time" {...field} value={field.value! || ''} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+
                             )}
                         />
                         <FormField
@@ -292,7 +346,7 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                             render={() => (
                                 <FormItem>
                                     <div className="mb-4">
-                                        <FormLabel className="text-base">Frameworks</FormLabel>
+                                        <FormLabel>Frameworks</FormLabel>
                                     </div>
                                     {frameworks.map((item) => (
                                         <FormField
@@ -327,6 +381,26 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                                             }}
                                         />
                                     ))}
+                                    <FormField
+                                        control={form.control}
+                                        name="custom_framework"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                <FormControl>
+                                                    <Checkbox
+                                                        checked={field.value !== ''}
+                                                        onCheckedChange={(checked: string | boolean) => {
+                                                            return checked
+                                                                ? field.onChange('Custom')
+                                                                : field.onChange('');
+                                                        }}
+                                                    />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">Custom:</FormLabel>
+                                                <Input placeholder="Enter custom framework" {...field} disabled={!field.value} value={field.value! || ''} />
+                                            </FormItem>
+                                        )}
+                                    />
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -347,13 +421,32 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                                                     <FormLabel className="font-normal">{item}</FormLabel>
                                                 </FormItem>
                                             ))}
+                                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                <FormControl>
+                                                    <RadioGroupItem
+                                                        value="Custom"
+                                                        checked={field.value != "" && field.value != "yes" && field.value != "no" && field.value != "maybe"}
+                                                        onClick={() => {
+                                                            if (field.value !== 'Custom') {
+                                                                field.onChange('Custom');
+                                                            }
+                                                        }}
+                                                    />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">Custom:</FormLabel>
+                                                <Input
+                                                    placeholder="Enter custom option"
+                                                    {...field}
+                                                    disabled={field.value == '' || field.value == 'yes' || field.value == 'no' || field.value == 'maybe'}
+                                                />
+                                            </FormItem>
                                         </RadioGroup>
                                     </FormControl>
-
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
+
                         <FormField
                             control={form.control}
                             name="rating"
@@ -368,6 +461,25 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
 
                             )}
                         />
+                        <FormField
+                            control={form.control}
+                            name="ongoing"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <FormLabel>
+                                            Ongoing
+                                        </FormLabel>
+                                    </div>
+                                    <FormControl>
+                                        <Switch
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
 
                         <FormField
                             control={form.control}
@@ -379,7 +491,6 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                                         <FileUpload
                                             endpoint="projectImage"
                                             onChange={(value) => {
-                                                // Update the value in your form state using the provided onChange callback
                                                 field.onChange(value);
                                             }}
                                             value={field.value}
@@ -401,7 +512,6 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                                         <FileUpload
                                             endpoint="projectBrief"
                                             onChange={(value) => {
-                                                // Update the value in your form state using the provided onChange callback
                                                 field.onChange(value);
                                             }}
                                             value={field.value}

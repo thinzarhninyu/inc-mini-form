@@ -16,10 +16,12 @@ model Form {
     project_name    String
     description     String
     completion_date DateTime
+    completion_time String?
     type            String
     frameworks      String[]
     updates         String
     rating          Int
+    ongoing         Boolean
     image           String
     brief           String?
 
