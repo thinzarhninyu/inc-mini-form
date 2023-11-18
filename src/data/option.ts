@@ -1,27 +1,27 @@
 const frameworks = [
     {
-        id: "recents",
-        label: "Recents",
+        id: "reactjs",
+        label: "ReactJS",
     },
     {
-        id: "home",
-        label: "Home",
+        id: "nextjs",
+        label: "NextJS",
     },
     {
-        id: "applications",
-        label: "Applications",
+        id: "vuejs",
+        label: "VueJS",
     },
     {
-        id: "desktop",
-        label: "Desktop",
+        id: "nuxtjs",
+        label: "NuxtJS",
     },
     {
-        id: "downloads",
-        label: "Downloads",
+        id: "angular",
+        label: "AngularJS",
     },
     {
-        id: "documents",
-        label: "Documents",
+        id: "laravel",
+        label: "Laravel",
     },
 ] as const;
 
