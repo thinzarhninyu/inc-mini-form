@@ -61,7 +61,7 @@ const FormSchema = z.object({
         message: "Input field cannot be null."
     }),
     frameworks: z.array(z.string()).refine((value) => value.some((item) => item), {
-        message: "You have to select at least one item.",
+        message: "You have to select at least one default option.",
     }),
     custom_framework: z.string().nullable(),
     updates: z.string().min(1, {
