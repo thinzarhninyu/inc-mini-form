@@ -18,6 +18,8 @@ import {
 import { toast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button";
 
+import Loading from "@/components/Loading";
+
 import { Plus } from "lucide-react";
 
 import { api } from "@/utils/api";
@@ -31,23 +33,31 @@ const Dashboard = () => {
     const deleteForm = api.form.deleteForm.useMutation();
 
     const [form_list, set_forms] = useState(forms);
+    const [loading, set_loading] = useState(false);
 
     useEffect(() => {
         set_forms(forms);
     }, [forms])
 
     const handleDelete = async (id: string, event: React.MouseEvent<HTMLButtonElement>) => {
+        set_loading(true);
         event.preventDefault();
         try {
             await deleteForm.mutateAsync({ id });
+            set_loading(false);
             toast({
                 title: "You have successfully deleted the form!"
             })
             set_forms((form_list) => form_list?.filter((form) => form.id !== id));
         } catch (error) {
+            set_loading(false);
             console.error("Error deleting form:", error);
         }
     };
+
+    if (loading) {
+        return <Loading />;
+    }
 
     return (
         <div className="flex justify-center items-center">

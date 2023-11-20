@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -40,6 +40,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 import { FileUpload } from "@/components/FileUpload"
+import Loading from "@/components/Loading"
 
 import { cn } from "@/lib/utils"
 import { api } from "@/utils/api"
@@ -80,6 +81,8 @@ const FormSchema = z.object({
 })
 
 export function ProjectForm({ formData }: { formData?: FormType }) {
+
+    const [loading, set_loading] = useState(false);
 
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
@@ -139,7 +142,7 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
     const updateForm = api.form.updateForm.useMutation();
 
     async function onSubmit(data: z.infer<typeof FormSchema>) {
-
+        set_loading(true);
         if (formData) {
             try {
                 const res = await updateForm.mutateAsync({
@@ -161,7 +164,7 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                     image: data.image,
                     brief: data.brief,
                 });
-
+                set_loading(false);
                 toast({
                     title: "You updated the following values:",
                     description: (
@@ -173,6 +176,13 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                 window.location.href = "/";
                 return res;
             } catch (error) {
+                set_loading(false);
+                toast({
+                    title: "Update failed!",
+                    description: (
+                        <p>Check the form fields for more info!</p>
+                    ),
+                });
                 console.error("Error updating form:", error);
             }
         } else {
@@ -196,6 +206,7 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                     brief: data.brief,
                 });
 
+                set_loading(false);
                 toast({
                     title: "You submitted the following values:",
                     description: (
@@ -219,12 +230,22 @@ export function ProjectForm({ formData }: { formData?: FormType }) {
                     image: "",
                     brief: null,
                 });
-
                 return res;
             } catch (error) {
+                set_loading(false);
+                toast({
+                    title: "Submission failed!",
+                    description: (
+                        <p>Check the form fields for more info!</p>
+                    ),
+                });
                 console.error("Error creating form:", error);
             }
         }
+    }
+
+    if (loading) {
+        return <Loading />;
     }
 
     return (
